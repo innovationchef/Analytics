@@ -1,17 +1,8 @@
-import csv
-import random 
-import sys
-from itertools import chain, combinations
-from collections import defaultdict
-import collections
-from operator import itemgetter
 import math
+import random 
+from collections import defaultdict
 from random import randint
-import numpy as np
-import copy
-import itertools
-import matplotlib.pyplot as plt; plt.rcdefaults()
-import matplotlib.pyplot as plt
+from itertools import chain, combinations
 
 def dataFromFile(fname):
         file_iter = open(fname, 'rU')
@@ -203,47 +194,52 @@ def encode(listOfAttribute):
         i += 1
     return encoded_set
 
+def int2bin(i, fill):
+    if i == 0: return "0"
+    s = ''
+    while i:
+        if i & 1 == 1:
+            s = "1" + s
+        else:
+            s = "0" + s
+        i /= 2
+    return s.zfill(fill)
+
 def functionForOneGeneration(initPop, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17):
-    popoForNextGen = []
-    popoToExamineThisGen = []
+    popForNextGen = []
+    popOfThisGen = []
     nan = 0
+    newPop = {}
     while nan < (len(initPop)-1):
         a=initPop[nan]
         b=initPop[nan+1]
-        if (None in a) or (None in b):
-            print 'lolo'
+
         x,y = crossover(a,b)
+
         decodedRule1 = decode(list(chain.from_iterable(x)), C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
         decodedRule2 =  decode(list(chain.from_iterable(y)), C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
+        
         decodedRule1, decodedRule2 = mutate(decodedRule1, decodedRule2)
-
-        antecedent, consequent = separateChromosome(decodedRule1)            
+        
+        antecedent, consequent = separateChromosome(decodedRule1)   
         newPop[nan] = joinChromosome(antecedent, consequent)
-                        
+
         antecedent, consequent = separateChromosome(decodedRule2)    
         newPop[nan+1] = joinChromosome(antecedent, consequent)
         nan += 1
-    print 'hehe'
-    i = 0
+    
     for key, value in newPop.items():
-        # print i, key, value
-        popoToExamineThisGen.append(value)
-        pp = createParentFromChild(C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, joinChromosomeForNext(value[0], value[1]))
-        popoForNextGen.append(pp)
-        i+=1
-    return popoToExamineThisGen,popoForNextGen
+        popOfThisGen.append(value)
+        child = createParentFromChild(C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, joinChromosomeForNext(value[0], value[1]))
+        popForNextGen.append(child)
+        
+    return popOfThisGen,popForNextGen
 
 def crossover(chromosome1,chromosome2):
     chr1 = []
     chr2 = []
-    i = 0
     def crossoverGene(gene1, gene2):
-        exception = 0
-        try:
-            length = len(gene1.split()[0])
-            length2 = len(gene2.split()[0])
-        except AttributeError:
-            return exception
+        length = len(gene1.split()[0])
         crossoverPoint = int(math.ceil((length+1)/2))
         childChromosome1 = []
         childChromosome2 = []
@@ -251,25 +247,15 @@ def crossover(chromosome1,chromosome2):
         childChromosome1.append(gene2.split()[0][crossoverPoint:length])
         childChromosome2.append(gene2.split()[0][0:crossoverPoint])
         childChromosome2.append(gene1.split()[0][crossoverPoint:length])
-        # print gene1.split()[0]
-        # print gene2.split()[0]
-        # print gene1, childChromosome1
-        # print gene2, childChromosome2
         childChromosome1  = [''.join(childChromosome1[0:2])]
         childChromosome2  = [''.join(childChromosome2[0:2])]
-        # print gene1, childChromosome1
-        # print gene2, childChromosome2
         return childChromosome1, childChromosome2
-    # print chromosome1, chromosome2
+    i = 0
     while i < 17:
-        if crossoverGene(chromosome1[i], chromosome2[i]) is 0:
-            continue
-        else:
-            x, y = crossoverGene(chromosome1[i], chromosome2[i]) 
-            chr1.append(x)
-            chr2.append(y)
-            i+=1
-    
+        x, y = crossoverGene(chromosome1[i], chromosome2[i]) 
+        chr1.append(x)
+        chr2.append(y)
+        i+=1
     return chr1, chr2
 
 def decode(chromosome, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17):
@@ -290,7 +276,6 @@ def decode(chromosome, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C
     E15 = encode(C15)
     E16 = encode(C16)
     E17 = encode(C17)
-    # print chromosome
     p = 0.7
     items = []
     for key, val in E1.items():
@@ -396,32 +381,87 @@ def mutate(chromosome1, chromosome2):
     chromosome2.insert(index1, 'break')
     return chromosome1, chromosome2
 
+def separateChromosome(chromosome):
+    emptyList = []
+    index = chromosome.index('break')
+    if (index == 0):
+        return emptyList, chromosome[1:len(chromosome)]
+    if (index == len(chromosome)):
+        return chromosome[0:len(chromosome)], emptyList
+    else:
+        return chromosome[0:index], chromosome[(index+1):len(chromosome)]
+
+def joinChromosome(antecedent, consequent):
+    joinChr = []
+    joinChr = [antecedent] + [consequent]
+    return joinChr
+
 def createParentFromChild(C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, newlist):
     offsppring = ['phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi','phi' ]
     dicttion = defaultdict()
     for listitem in newlist: 
         if listitem in C1: offsppring[0] = listitem
+        else: offsppring[0] = C1[randint(0,len(C1)-1)]
         if listitem in C2: offsppring[1] = listitem
+        else: offsppring[1] = C2[randint(0,len(C2)-1)]
         if listitem in C3: offsppring[2] = listitem
+        else: offsppring[2] = C3[randint(0,len(C3)-1)]
         if listitem in C4: offsppring[3] = listitem
+        else: offsppring[3] = C4[randint(0,len(C4)-1)]
         if listitem in C5: offsppring[4] = listitem
+        else: offsppring[4] = C5[randint(0,len(C5)-1)]
         if listitem in C6: offsppring[5] = listitem
+        else: offsppring[5] = C6[randint(0,len(C6)-1)]
         if listitem in C7: offsppring[6] = listitem
+        else: offsppring[6] = C7[randint(0,len(C7)-1)]
         if listitem in C8: offsppring[7] = listitem
+        else: offsppring[7] = C8[randint(0,len(C8)-1)]
         if listitem in C9: offsppring[8] = listitem
+        else: offsppring[8] = C9[randint(0,len(C9)-1)]
         if listitem in C10: offsppring[9] = listitem
+        else: offsppring[9] = C10[randint(0,len(C10)-1)]
         if listitem in C11: offsppring[10] = listitem
+        else: offsppring[10] = C11[randint(0,len(C11)-1)]
         if listitem in C12: offsppring[11] = listitem
+        else: offsppring[11] = C12[randint(0,len(C12)-1)]
         if listitem in C13: offsppring[12] = listitem
+        else: offsppring[12] = C13[randint(0,len(C13)-1)]
         if listitem in C14: offsppring[13] = listitem
+        else: offsppring[13] = C14[randint(0,len(C14)-1)]
         if listitem in C15: offsppring[14] = listitem
+        else: offsppring[14] = C15[randint(0,len(C15)-1)]
         if listitem in C16: offsppring[15] = listitem
+        else: offsppring[15] = C16[randint(0,len(C16)-1)]
         if listitem in C17: offsppring[16] = listitem
+        else: offsppring[16] = C17[randint(0,len(C17)-1)]
+    # print offsppring
     return offsppring
 
+def joinChromosomeForNext(antecedent, consequent):
+    joinChr = []
+    joinChr = antecedent + consequent
+    return joinChr
 
-def getBestFromThisIteration(popoToExamineThisGen, supportSet, transactionList):
-    
+def encodechild(C, gen):
+    encoded_set = encode(C)
+    for k, v in encoded_set.items():
+        if v == gen:
+            return k
+
+def encodeChildChromosome(popSize, gen1, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17,):
+    popo = []
+    z=0
+    while z<popSize:
+        childlist = [encodechild(C1, gen1[z][0]), encodechild(C2, gen1[z][1]), encodechild(C3, gen1[z][2]), encodechild(C4, gen1[z][3]),
+        encodechild(C5, gen1[z][4]), encodechild(C6, gen1[z][5]), encodechild(C7, gen1[z][6]), encodechild(C8, gen1[z][7]),
+        encodechild(C9, gen1[z][8]), encodechild(C10, gen1[z][9]), encodechild(C11, gen1[z][10]), encodechild(C12, gen1[z][11]), 
+        encodechild(C13, gen1[z][12]),encodechild(C14, gen1[z][13]),encodechild(C15, gen1[z][14]),encodechild(C16, gen1[z][15]),
+        encodechild(C17, gen1[z][16])]
+        popo.append(childlist)
+        z+=1
+    return popo
+
+def getBestFromCurrentPop(popoToExamineThisGen, supportSet, transactionList):
     usefulRules = []
     for t in popoToExamineThisGen:
         if (len(t[0]) == 0) or (len(t[1]) == 0) :
@@ -432,11 +472,10 @@ def getBestFromThisIteration(popoToExamineThisGen, supportSet, transactionList):
                 if getSupportOfItems(supportSet, transactionList, set(list(antecedent))) == 0.0 or getSupportOfItems(supportSet, transactionList, set(list(consequent))) == 0.0 or getConfidenceOfRule(supportSet, transactionList, set(list(antecedent)),set(list(consequent))) == 0.0:
                     dummy  = 1
                 else:
-                    # print getLiftOfRule(supportSet, transactionList, set(list(antecedent)), set(list(consequent))), antecedent, consequent, getFitness(supportSet, transactionList, set(list(antecedent)), set(list(consequent))), getConfidenceOfRule(supportSet, transactionList, set(list(antecedent)),set(list(consequent)))
-                    # newPop[getFitness(supportSet, transactionList, set(list(antecedent)), set(list(consequent)))] = joinChromosome(antecedent, consequent)
                     usefulRules.append(t)
             except ZeroDivisionError:
                 dummy = 1
+    # print usefulRules
     return usefulRules
 
 def getSupportOfItems(localSet, transactionList, multipleItems):
@@ -476,106 +515,27 @@ def getLiftOfRule(localSet, transactionList, antecedent, consequent):
     support_y = getSupportOfItems(localSet, transactionList, consequent)
     lift = support_xUy/(support_x*support_y)
     return lift
-
-def int2bin(i, fill):
-    if i == 0: return "0"
-    s = ''
-    while i:
-        if i & 1 == 1:
-            s = "1" + s
-        else:
-            s = "0" + s
-        i /= 2
-    return s.zfill(fill)
-
-def separateChromosome(chromosome):
-    emptyList = []
-    index = chromosome.index('break')
-    if (index == 0):
-        return emptyList, chromosome[1:len(chromosome)]
-    if (index == len(chromosome)):
-        return chromosome[0:len(chromosome)], emptyList
-    else:
-        return chromosome[0:index], chromosome[(index+1):len(chromosome)]
-
-def joinChromosome(antecedent, consequent):
-    joinChr = []
-    joinChr = [antecedent] + [consequent]
-    return joinChr
-
-def joinChromosomeForNext(antecedent, consequent):
-    joinChr = []
-    joinChr = antecedent + consequent
-    return joinChr
-
-def encodechild(C, gen):
-    encoded_set = encode(C)
-    for k, v in encoded_set.items():
-        if v == gen:
-            return k
-
-def encodeChildChromosome(popSize, gen1, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17,):
-    popo = []
-    z=0
-    while z<popSize:
-        childlist = [encodechild(C1, gen1[z][0]), encodechild(C2, gen1[z][1]), encodechild(C3, gen1[z][2]), encodechild(C4, gen1[z][3]),
-        encodechild(C5, gen1[z][4]), encodechild(C6, gen1[z][5]), encodechild(C7, gen1[z][6]), encodechild(C8, gen1[z][7]),
-        encodechild(C9, gen1[z][8]), encodechild(C10, gen1[z][9]), encodechild(C11, gen1[z][10]), encodechild(C12, gen1[z][11]), 
-        encodechild(C13, gen1[z][12]),encodechild(C14, gen1[z][13])]
-        popo.append(childlist)
-        z+=1
-    return popo
-
-
-
-
-
-popSize = 100
-
+#############################  Main  ################################# 
 x = dataFromFile("ARMData.csv")
 itemSet, transactionList = getItemSetTransactionList(x)
 supportSet = getSupportOfAllItems(itemSet, transactionList)
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17= getAttributes(itemSet, transactionList)
 
-newPop = {}
-
-l = 0
-s = generatePopulation(popSize, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
-initPop = s
-generation = 0
+popSize = 100
 rulesInDifferentFeneration = []
 fitnessOverGenerations = []
-while generation<2:
-    popoToExamineThisGen, gen1 = functionForOneGeneration(initPop, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
-    initPop = encodeChildChromosome(popSize, gen1, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17) 
-    discussRules = getBestFromThisIteration(popoToExamineThisGen, supportSet, transactionList)
-    rulesInDifferentFeneration.append(discussRules)
-    fitnessOverGenerations.append(makeUseOfRules(discussRules, supportSet, transactionList)) 
-    generation += 1
+i=0
+while i<20:
+    initPop = generatePopulation(popSize, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
+    currentGeneration, nextGeneration = functionForOneGeneration(initPop, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
+    initPop = encodeChildChromosome(popSize, nextGeneration, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
+    discussRules = getBestFromCurrentPop(currentGeneration, supportSet, transactionList)
+    if len(discussRules) is not 0:
+        rulesInDifferentFeneration.append(discussRules)
+        fitnessOverGenerations.append(makeUseOfRules(discussRules, supportSet, transactionList))
+    i = i+1
 
 for t in rulesInDifferentFeneration[fitnessOverGenerations.index(max(fitnessOverGenerations))] : 
     print t[0], t[1], getConfidenceOfRule(supportSet, transactionList, set(list(t[0])), set(list(t[1]))), getLiftOfRule(supportSet, transactionList, set(list(t[0])), set(list(t[1])))
+    print "***********************************************************************************"
 
-
-
-# print fitnessOverGenerations.index(max(fitnessOverGenerations))
-# print len(fitnessOverGenerations)
-
-
-
-# fitnessOverGenerations.insert(0,0)
-# objects = []
-# i=0
-# while i<len(fitnessOverGenerations):
-#     objects.append(i)
-#     i += 1
-# objects.append(i)
-# y_pos = np.arange(len(fitnessOverGenerations))
-# performance = fitnessOverGenerations
-# print objects, len(performance)
-# plt.plot(y_pos, performance, marker='o', linestyle='--', color='r')
-# # plt.bar(y_pos, performance, align='center', alpha=0.5)
-# plt.xticks(y_pos, objects)
-# plt.ylabel('fitness')
-# plt.title('generation')
-# plt.show()
