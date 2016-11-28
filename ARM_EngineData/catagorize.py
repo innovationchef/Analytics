@@ -1,3 +1,4 @@
+import pandas as pd
 import csv
 import numpy as np
 def loadfile(csv_file):
@@ -39,7 +40,7 @@ def nameVar(value, classs):
 def numToCat(X,p):
 	Y = X[:,p]
 	newY = np.zeros((1))
-	noOfCategories = 6
+	noOfCategories = 8
 	step = (float(np.max(Y)) - float(np.min(Y)))/noOfCategories
 	steparr = {}
 	for i in range(0, noOfCategories+1):
@@ -54,9 +55,38 @@ def numToCat(X,p):
 					break
 				else:
 					dummy = 1
-
 	newY = np.delete(newY,0,0)
 	return newY
+
+def deleteColumns(sourceFile, targetFile):
+	# there are many classes whose value does not change with cycle, 
+	#I am deleting those 
+
+	f=pd.read_csv(sourceFile)
+	keep_col = [0,1,2,5,6,7,10,11,12,14,15,16,17,18,20,23,24]
+	new_f = f[keep_col]
+	new_f.to_csv(targetFile, index=False)
+
+
+X = loadfile('scrapedData.csv')
+
+num_rows, num_cols = X.shape
+catagoryArray = np.zeros((num_rows, 1))
+
+for i in range(0,num_cols):
+	Z = numToCat(X,i)
+	# print np.size(Z)
+	catagoryArray = np.hstack([catagoryArray, numToCat(X,i)])
+catagoryArray = np.delete(catagoryArray,0,1)
+
+with open('catagorizedData.csv', 'wb') as f:
+    csv.writer(f).writerows(catagoryArray)
+
+deleteColumns('catagorizedData.csv', 'ARMData.csv')
+
+
+
+
 
 # def numToCat(X,p):
 # 	Y = X[:,p]
@@ -78,25 +108,3 @@ def numToCat(X,p):
 # 		continue
 # 	newY = np.delete(newY,0,0)
 # 	return newY
-
-############# there are many classeswhose value does not change with cycle, Iam deleting those #############
-import pandas as pd
-f=pd.read_csv("scrapedData.csv")
-keep_col = [0,1,2,5,6,7,10,11,12,14,15,16,17,18,20,23,24]
-new_f = f[keep_col]
-new_f.to_csv("catagorizedData.csv", index=False)
-############################################################################################################
-
-X = loadfile('catagorizedData.csv')
-
-num_rows, num_cols = X.shape
-catagoryArray = np.zeros((num_rows, 1))
-# print np.size(numToCat(X,9))
-for i in range(0,num_cols):
-	Z = numToCat(X,i)
-	# print np.size(Z)
-	catagoryArray = np.hstack([catagoryArray, numToCat(X,i)])
-catagoryArray = np.delete(catagoryArray,0,1)
-
-with open('catagorizedData.csv', 'wb') as f:
-    csv.writer(f).writerows(catagoryArray)

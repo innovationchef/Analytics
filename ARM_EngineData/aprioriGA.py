@@ -522,11 +522,13 @@ supportSet = getSupportOfAllItems(itemSet, transactionList)
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17= getAttributes(itemSet, transactionList)
 
 popSize = 100
+generations = 10
 rulesInDifferentFeneration = []
 fitnessOverGenerations = []
 i=0
-while i<20:
+while i<generations:
     initPop = generatePopulation(popSize, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
+    # print initPop	
     currentGeneration, nextGeneration = functionForOneGeneration(initPop, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
     initPop = encodeChildChromosome(popSize, nextGeneration, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17)
     discussRules = getBestFromCurrentPop(currentGeneration, supportSet, transactionList)
