@@ -3,6 +3,33 @@ Neural Networks
 Back Propagation
 Stochastic Grad Descent
 """
+"""
+Further Developments :::::::
+
+1. Tune Algorithm Parameters. Try larger or smaller networks trained for longer or shorter. 
+See if you can get better performance on the seeds dataset.
+2. Additional Methods. Experiment with different weight initialization techniques (such as 
+small random numbers) and different transfer functions (such as tanh).
+3. More Layers. Add support for more hidden layers, trained in just the same way as the one 
+hidden layer used in this tutorial.
+4. Regression. Change the network so that there is only one neuron in the output layer and 
+that a real value is predicted. Pick a regression dataset to practice on. A linear transfer 
+function could be used for neurons in the output layer, or the output values of the chosen 
+dataset could be scaled to values between 0 and 1.
+5. Batch Gradient Descent. Change the training procedure from online to batch gradient descent and update the weights only at the end of each epoch.
+"""
+
+
+
+
+
+
+
+
+
+
+
+
 
 '''
 DATASET  :::
